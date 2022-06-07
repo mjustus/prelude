@@ -38,10 +38,18 @@ module Make1 = functor (R : Type.TYPE1) (M : Monad.S) -> struct
   let local : 'r1 'r2. ('r2 R.t -> 'r1 R.t) -> ('a, 'r1) t -> ('a, 'r2) t = fun f m r ->
     m (f r)
 
-  let (let*) = bind
-  let (>>=) = bind
-  let (<$>) = map
-  let (<*>) = lift
+  let join : 'a 'r. (('a, 'r) t, 'r) t -> ('a, 'r) t = fun m ->
+    bind m Function.id
+
+  module Op = struct
+    let (let*) = bind
+    let (>>=) = bind
+    let (<$>) = map
+    let (<*>) = lift
+    let (>>)  = ignore
+    let ( <**> ) : 'a 'b 'r. ('a -> ('b, 'r) t, 'r) t -> ('a, 'r) t -> ('b, 'r) t = fun f m ->
+      join (f <*> m)
+  end
 end
 
 module Make2 = functor (R : Type.TYPE2) (M : Monad.S) -> struct
